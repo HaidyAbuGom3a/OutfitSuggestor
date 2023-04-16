@@ -13,6 +13,9 @@ android {
         targetSdk 33
         versionCode 1
         versionName "1.0"
+        Properties properties = new Properties()
+        properties.load(project.rootProject.file('secret.properties').newDataInputStream())
+        buildConfigField "String", "API_KEY", "${properties.getProperty('API_KEY')}"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -29,6 +32,9 @@ android {
     }
     kotlinOptions {
         jvmTarget = '1.8'
+    }
+    buildFeatures{
+        viewBinding true
     }
 }
 
