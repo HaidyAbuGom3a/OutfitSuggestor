@@ -1,11 +1,12 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+
 }
 
 android {
     namespace 'com.example.outfitsuggestor'
-    compileSdk 33
+    compileSdkVersion 33
 
     defaultConfig {
         applicationId "com.example.outfitsuggestor"
@@ -51,5 +52,8 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:4.10.0'
     //Gson
     implementation 'com.google.code.gson:gson:2.10.1'
+    //Location
+    implementation 'com.google.android.gms:play-services-location:21.0.1'
+
 
 }
