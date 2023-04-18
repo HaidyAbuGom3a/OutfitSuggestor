@@ -1,21 +1,22 @@
 package com.example.outfitsuggestor.ui
 
-import android.app.Activity
 import android.content.Context
 import android.util.Log
-import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.example.outfitsuggestor.data.model.WeatherResponse
 import com.example.outfitsuggestor.data.source.DataSource
+import com.example.outfitsuggestor.ui.permission.LocationPermissionHandler
 import com.example.outfitsuggestor.utils.SharedPrefsUtil
 
 class MainPresenter(
-    private val activity: Activity,
-    private val context: Context,
+    activity: AppCompatActivity,
+    context: Context,
     private val mainViewInterface: MainViewInterface,
-    private var mlatitude:Double? = null,
-    private var mlongitude:Double? = null
 ) {
-    private val dataSource = DataSource(context, activity)
+    private val dataSource = DataSource()
+    private val locationHandler = LocationPermissionHandler(activity,context)
+    private var mlatitude:Double? = null
+    private var mlongitude:Double? = null
     fun getWeatherData() {
         Log.i("INSIDE_WEATHER","$mlatitude")
         dataSource.getWeatherData(
@@ -36,7 +37,7 @@ class MainPresenter(
     }
 
     fun handleLocationPermissions() {
-        dataSource.getCurrentLocation(
+        locationHandler.getCurrentLocation(
             ::onLocationUpdated,
             ::showLocationIsNull,
             ::makeUserTurnOnLocation
