@@ -94,6 +94,7 @@ class MainActivity : AppCompatActivity(), MainViewInterface {
 
     private fun showBackgroundBasedOnWeatherCondition(weatherCondition: String) {
         when (weatherCondition) {
+            "Clear" -> setBackground(R.drawable.bg_clear)
             "Clouds" -> setBackground(R.drawable.bg_scattered_clouds)
             "Drizzle" -> setBackground(R.drawable.bg_shower_rain)
             "Rain" -> setBackground(R.drawable.bg_rain)
