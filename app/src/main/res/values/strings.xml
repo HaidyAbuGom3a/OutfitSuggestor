@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">OutfitSuggestor</string>
+    <string name="outfit_recommendation_header">Today’s outfit recommendation</string>
 </resources>
