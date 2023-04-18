@@ -1,17 +1,17 @@
 package com.example.outfitsuggestor.ui
 
+import android.app.Activity
 import android.content.Context
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
 import com.example.outfitsuggestor.data.model.WeatherResponse
 import com.example.outfitsuggestor.data.source.DataSource
 import com.example.outfitsuggestor.ui.permission.LocationPermissionHandler
 import com.example.outfitsuggestor.utils.SharedPrefsUtil
 
 class MainPresenter(
-    activity: AppCompatActivity,
+    activity: Activity,
     context: Context,
-    private val mainViewInterface: MainViewInterface,
+    private val mainView: MainView,
 ) {
     private val dataSource = DataSource()
     private val locationHandler = LocationPermissionHandler(activity,context)
@@ -20,8 +20,8 @@ class MainPresenter(
     fun getWeatherData() {
         Log.i("INSIDE_WEATHER","$mlatitude")
         dataSource.getWeatherData(
-            mlatitude,
-            mlongitude,
+            26.8206,
+            30.8025,
             "metric",
             ::onGetWeatherDataSuccess,
             ::onGetWeatherDataFailure
@@ -29,11 +29,11 @@ class MainPresenter(
     }
 
     private fun onGetWeatherDataSuccess(response: WeatherResponse) {
-        mainViewInterface.onWeatherSuccessResponse(response)
+        mainView.handleWeatherDataOnUi(response)
     }
 
     private fun onGetWeatherDataFailure(error: Throwable) {
-        mainViewInterface.onWeatherFailureResponse(error)
+        mainView.showSomethingWentWrongInNetwork(error)
     }
 
     fun handleLocationPermissions() {
@@ -51,11 +51,11 @@ class MainPresenter(
     }
 
     private fun showLocationIsNull() {
-        mainViewInterface.showLocationIsNull()
+        mainView.showLocationIsNull()
     }
 
     private fun makeUserTurnOnLocation() {
-        mainViewInterface.makeUserTurnOnLocation()
+        mainView.makeUserTurnOnLocation()
     }
 
     fun getOutfitSuitableForRain(excludedOutfits: Set<String>?): Int {

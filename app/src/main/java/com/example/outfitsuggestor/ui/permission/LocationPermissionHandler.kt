@@ -1,11 +1,11 @@
 package com.example.outfitsuggestor.ui.permission
 
+import android.app.Activity
 import android.content.Context
-import androidx.appcompat.app.AppCompatActivity
 import com.example.outfitsuggestor.utils.LocationUtils
 
 class LocationPermissionHandler(
-    private val activity: AppCompatActivity,
+    private val activity: Activity,
     private val context: Context
 ) : PermissionHandler {
 
@@ -16,7 +16,7 @@ class LocationPermissionHandler(
     ) {
         if (LocationUtils.checkLocationPermission(context)) {
             if (LocationUtils.isLocationEnabled(context)) {
-                LocationUtils.getLastKnownLocation(activity) { location ->
+                LocationUtils.getLastKnownLocation(context,activity) { location ->
                     if (location == null) {
                         showLocationIsNull()
                     } else {

@@ -14,7 +14,7 @@ import com.example.outfitsuggestor.databinding.ActivityMainBinding
 import com.example.outfitsuggestor.utils.Constants
 import com.example.outfitsuggestor.utils.SharedPrefsUtil
 
-class MainActivity : AppCompatActivity(), MainViewInterface {
+class MainActivity : AppCompatActivity(), MainView {
     private lateinit var binding: ActivityMainBinding
     private val presenter by lazy {
         MainPresenter(this, applicationContext, this)
@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity(), MainViewInterface {
         presenter.handleLocationPermissions()
     }
 
-    override fun onWeatherSuccessResponse(response: WeatherResponse) {
+    override fun handleWeatherDataOnUi(response: WeatherResponse) {
         runOnUiThread {
             val weatherCondition = response.weather[0].main
             val temperature = response.main.temp.toInt()
@@ -97,19 +97,14 @@ class MainActivity : AppCompatActivity(), MainViewInterface {
         binding.outfit.background = ContextCompat.getDrawable(this, outfit)
     }
 
-    override fun onWeatherFailureResponse(error: Throwable) {
+    override fun showSomethingWentWrongInNetwork(error: Throwable) {
         Log.i("ACTIVITY_MAIN", "failed")
-        Toast.makeText(
-            this,
-            "Something went wrong",
-            Toast.LENGTH_SHORT
-        ).show()
     }
 
     override fun showLocationIsNull() {
         Toast.makeText(
             this,
-            "Location is null please try another one",
+            "Location is null",
             Toast.LENGTH_SHORT
         ).show()
     }
