@@ -98,7 +98,7 @@ class MainActivity : AppCompatActivity(), MainView {
     }
 
     override fun showSomethingWentWrongInNetwork(error: Throwable) {
-        Log.i("ACTIVITY_MAIN", "failed")
+        Log.i(TAG, "failed")
     }
 
     override fun showLocationIsNull() {
@@ -144,6 +144,10 @@ class MainActivity : AppCompatActivity(), MainView {
                 presenter.handleLocationPermissions()
             }
         }
+    }
+
+    companion object{
+        private const val TAG = "ACTIVITY_MAIN"
     }
 
 }

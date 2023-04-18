@@ -18,7 +18,6 @@ class MainPresenter(
     private var mlatitude:Double? = null
     private var mlongitude:Double? = null
     fun getWeatherData() {
-        Log.i("INSIDE_WEATHER","$mlatitude")
         dataSource.getWeatherData(
             26.8206,
             30.8025,
@@ -47,7 +46,6 @@ class MainPresenter(
     private fun onLocationUpdated(latitude: Double, longitude: Double){
         mlatitude = latitude
         mlongitude = longitude
-        Log.i("NOT_NULLLL","$mlatitude")
     }
 
     private fun showLocationIsNull() {
