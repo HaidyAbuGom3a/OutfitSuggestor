@@ -19,8 +19,20 @@ class MainPresenter(
     private var mlongitude:Double? = null
     fun getWeatherData() {
         dataSource.getWeatherData(
-            26.8206,
-            30.8025,
+            null,
+            null,
+            "Damietta",
+            "metric",
+            ::onGetWeatherDataSuccess,
+            ::onGetWeatherDataFailure
+        )
+    }
+
+    fun getWeatherDataWithSearch(location:String){
+        dataSource.getWeatherData(
+            null,
+            null,
+            location,
             "metric",
             ::onGetWeatherDataSuccess,
             ::onGetWeatherDataFailure

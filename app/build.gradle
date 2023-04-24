@@ -54,6 +54,10 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.10.1'
     //Location
     implementation 'com.google.android.gms:play-services-location:21.0.1'
+    //Rx
+    implementation "io.reactivex.rxjava3:rxjava:3.1.6"
+    implementation 'io.reactivex.rxjava3:rxandroid:3.0.2'
+
 
 
 }

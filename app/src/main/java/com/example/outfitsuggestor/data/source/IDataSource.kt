@@ -7,6 +7,7 @@ interface IDataSource {
     fun getWeatherData(
         latitude: Double?,
         longitude: Double?,
+        location: String?,
         units: String,
         onSuccessCallback: (WeatherResponse) -> Unit,
         onFailureCallback: (error: Throwable) -> Unit

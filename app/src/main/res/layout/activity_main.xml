@@ -7,6 +7,25 @@
     android:background="@drawable/bg_rain"
     tools:context=".ui.MainActivity">
 
+    <EditText
+        android:id="@+id/text_input"
+        android:layout_height="50dp"
+        android:layout_width="match_parent"
+        android:background="@drawable/bg_edit_text"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:paddingHorizontal="@dimen/spacing_medium"
+        android:drawableStart="@drawable/ic_search"
+        android:drawablePadding="@dimen/spacing_small"
+        android:hint="@string/search_hint"
+        android:textColorHint="@color/gray"
+        android:layout_marginHorizontal="@dimen/spacing_medium"
+        android:layout_marginVertical="@dimen/spacing_large"
+
+    />
+
+
     <TextView
         android:id="@+id/text_temperature"
         android:layout_width="wrap_content"

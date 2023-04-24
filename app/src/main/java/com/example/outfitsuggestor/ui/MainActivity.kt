@@ -1,5 +1,6 @@
 package com.example.outfitsuggestor.ui
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -8,11 +9,18 @@ import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.widget.doOnTextChanged
 import com.example.outfitsuggestor.R
 import com.example.outfitsuggestor.data.model.WeatherResponse
 import com.example.outfitsuggestor.databinding.ActivityMainBinding
 import com.example.outfitsuggestor.utils.Constants
 import com.example.outfitsuggestor.utils.SharedPrefsUtil
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.core.Scheduler
+import io.reactivex.rxjava3.schedulers.Schedulers
+import java.sql.Time
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity(), MainView {
     private lateinit var binding: ActivityMainBinding
@@ -29,11 +37,41 @@ class MainActivity : AppCompatActivity(), MainView {
     }
 
     private fun setUp() {
+        addCallbacks()
         handleLocationPermissions()
         getWeatherData()
         SharedPrefsUtil.initPrefsUtil(applicationContext)
         getUsedOutfits()
         eraseOldestOutfitAfterGivenDays(3)
+    }
+
+    private fun addCallbacks() {
+        onClickSearchInput()
+    }
+
+    @SuppressLint("CheckResult")
+    private fun onClickSearchInput() {
+        val observable = Observable.create<String> { emitter ->
+            binding.textInput.doOnTextChanged { text, start, before, count ->
+                emitter.onNext(text.toString())
+            }
+        }
+            .debounce(1,TimeUnit.SECONDS)
+            .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+
+        observable.subscribe(
+            ::makeRequest,
+            ::onError
+        )
+    }
+
+    private fun makeRequest(location: String) {
+        Log.i(TAG,location)
+        presenter.getWeatherDataWithSearch(location)
+    }
+
+    private fun onError(e: Throwable) {
+        Log.i(TAG,"something went wrong :(")
     }
 
     private fun getUsedOutfits() {
@@ -138,15 +176,15 @@ class MainActivity : AppCompatActivity(), MainView {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if(requestCode == Constants.PERMISSION_ID){
-            if(grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                Toast.makeText(applicationContext,"Granted",Toast.LENGTH_SHORT).show()
+        if (requestCode == Constants.PERMISSION_ID) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(applicationContext, "Granted", Toast.LENGTH_SHORT).show()
                 presenter.handleLocationPermissions()
             }
         }
     }
 
-    companion object{
+    companion object {
         private const val TAG = "ACTIVITY_MAIN"
     }
 

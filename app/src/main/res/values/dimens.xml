@@ -20,5 +20,6 @@
 
     <!-- radius -->
     <dimen name="radius_medium">24sp</dimen>
+    <dimen name="radius_large">50dp</dimen>
 
 </resources>

@@ -15,6 +15,7 @@ class DataSource() : IDataSource {
     override fun getWeatherData(
         latitude: Double?,
         longitude: Double?,
+        location:String?,
         units: String,
         onSuccessCallback: (WeatherResponse) -> Unit,
         onFailureCallback: (error: Throwable) -> Unit
@@ -26,6 +27,7 @@ class DataSource() : IDataSource {
             .apply {
                 addQueryParameter("lat", latitude.toString())
                 addQueryParameter("lon", longitude.toString())
+                addQueryParameter("q",location)
                 addQueryParameter("appid", BuildConfig.API_KEY)
                 addQueryParameter("units", units)
             }.build()
