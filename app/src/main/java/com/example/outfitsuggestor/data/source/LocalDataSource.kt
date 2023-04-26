@@ -63,11 +63,6 @@ object LocalDataSource {
         ),
         Outfit(
             OutfitType.NEUTRAL_CLOTHES,
-            R.drawable.outfit2_neutral_no_rain,
-            false
-        ),
-        Outfit(
-            OutfitType.NEUTRAL_CLOTHES,
             R.drawable.outfit4_neutra_no_rain,
             false
         ),

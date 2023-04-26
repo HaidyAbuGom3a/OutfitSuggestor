@@ -28,6 +28,17 @@ class MainPresenter(
         )
     }
 
+    fun getCityName(latitude:Double,longitude: Double){
+        dataSource.getWeatherData(
+            latitude,
+            longitude,
+            null,
+            "metric",
+            ::onGetWeatherDataSuccess,
+            ::onGetWeatherDataFailure
+        )
+    }
+
     fun getWeatherDataWithSearch(location:String){
         dataSource.getWeatherData(
             null,

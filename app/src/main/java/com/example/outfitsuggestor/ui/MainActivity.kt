@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity(), MainView {
     private lateinit var binding: ActivityMainBinding
+    private lateinit var weatherResponse: WeatherResponse
     private val presenter by lazy {
         MainPresenter(this, applicationContext, this)
     }
@@ -39,7 +40,8 @@ class MainActivity : AppCompatActivity(), MainView {
     private fun setUp() {
         addCallbacks()
         handleLocationPermissions()
-        getWeatherData()
+        //getWeatherData()
+        getWeatherDataWithTwoRequests(48.8566,2.3522)
         SharedPrefsUtil.initPrefsUtil(applicationContext)
         getUsedOutfits()
         eraseOldestOutfitAfterGivenDays(3)
@@ -82,11 +84,29 @@ class MainActivity : AppCompatActivity(), MainView {
         presenter.getWeatherData()
     }
 
+    @SuppressLint("CheckResult")
+    private fun getWeatherDataWithTwoRequests(latitude:Double, longitude:Double){
+        val observable = Observable.just(latitude,longitude)
+            .flatMap {
+                Observable.create<String> { emitter ->
+                    presenter.getCityName(latitude,longitude)
+                    emitter.onNext(weatherResponse.name)
+                }
+            }
+            .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+
+        observable.subscribe(
+            ::makeRequest,
+            ::onError
+        )
+    }
+
     private fun handleLocationPermissions() {
         presenter.handleLocationPermissions()
     }
 
     override fun handleWeatherDataOnUi(response: WeatherResponse) {
+        weatherResponse = response
         runOnUiThread {
             val weatherCondition = response.weather[0].main
             val temperature = response.main.temp.toInt()
