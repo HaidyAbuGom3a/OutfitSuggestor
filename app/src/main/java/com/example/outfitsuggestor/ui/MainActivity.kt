@@ -17,14 +17,13 @@ import com.example.outfitsuggestor.utils.Constants
 import com.example.outfitsuggestor.utils.SharedPrefsUtil
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.schedulers.Schedulers
-import java.sql.Time
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity(), MainView {
     private lateinit var binding: ActivityMainBinding
     private lateinit var weatherResponse: WeatherResponse
+
     private val presenter by lazy {
         MainPresenter(this, applicationContext, this)
     }
@@ -34,70 +33,70 @@ class MainActivity : AppCompatActivity(), MainView {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setUp()
-
     }
 
     private fun setUp() {
         addCallbacks()
         handleLocationPermissions()
-        //getWeatherData()
-        getWeatherDataWithTwoRequests(48.8566,2.3522)
         SharedPrefsUtil.initPrefsUtil(applicationContext)
         getUsedOutfits()
-        eraseOldestOutfitAfterGivenDays(3)
+        eraseOldestOutfitAfterGivenDays(2)
     }
 
     private fun addCallbacks() {
         onClickSearchInput()
     }
 
-    @SuppressLint("CheckResult")
     private fun onClickSearchInput() {
-        val observable = Observable.create<String> { emitter ->
+        handleSearch()
+    }
+
+    @SuppressLint("CheckResult")
+    private fun handleSearch() {
+        val cityObservable = emitCityName()
+        cityObservable.subscribe(
+            ::getWeatherData,
+            ::showError
+        )
+    }
+
+    private fun emitCityName(): Observable<String> {
+        return Observable.create { emitter ->
             binding.textInput.doOnTextChanged { text, start, before, count ->
                 emitter.onNext(text.toString())
             }
         }
-            .debounce(1,TimeUnit.SECONDS)
+            .debounce(1, TimeUnit.SECONDS)
             .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
 
-        observable.subscribe(
-            ::makeRequest,
-            ::onError
-        )
     }
 
-    private fun makeRequest(location: String) {
-        Log.i(TAG,location)
-        presenter.getWeatherDataWithSearch(location)
+    private fun getWeatherData(location: String) {
+        presenter.getWeatherData(location)
     }
 
-    private fun onError(e: Throwable) {
-        Log.i(TAG,"something went wrong :(")
+    private fun showError(e: Throwable) {
+        Log.i(TAG, "something went wrong :(")
     }
 
     private fun getUsedOutfits() {
         usedOutfits = SharedPrefsUtil.outfitList
     }
 
-    private fun getWeatherData() {
-        presenter.getWeatherData()
-    }
-
     @SuppressLint("CheckResult")
-    private fun getWeatherDataWithTwoRequests(latitude:Double, longitude:Double){
-        val observable = Observable.just(latitude,longitude)
+    private fun getWeatherDataWithTwoRequests(latitude: Double, longitude: Double) {
+        val observable = Observable.just(latitude, longitude)
             .flatMap {
                 Observable.create<String> { emitter ->
-                    presenter.getCityName(latitude,longitude)
+                    presenter.getCityName(latitude, longitude)
                     emitter.onNext(weatherResponse.name)
                 }
             }
             .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
 
         observable.subscribe(
-            ::makeRequest,
-            ::onError
+            ::getWeatherData,
+            ::showError
         )
     }
 
@@ -202,6 +201,10 @@ class MainActivity : AppCompatActivity(), MainView {
                 presenter.handleLocationPermissions()
             }
         }
+    }
+
+    override fun onLocationUpdated(latitude: Double, longitude: Double) {
+        getWeatherDataWithTwoRequests(latitude, longitude)
     }
 
     companion object {

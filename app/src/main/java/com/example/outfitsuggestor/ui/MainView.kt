@@ -7,4 +7,5 @@ interface MainView {
     fun showSomethingWentWrongInNetwork(error: Throwable)
     fun showLocationIsNull()
     fun makeUserTurnOnLocation()
+    fun onLocationUpdated(latitude: Double, longitude: Double)
 }

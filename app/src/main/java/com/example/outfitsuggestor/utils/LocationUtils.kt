@@ -38,8 +38,8 @@ object LocationUtils {
         ActivityCompat.requestPermissions(
             activity,
             arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION
             ),
             Constants.PERMISSION_ID
         )
