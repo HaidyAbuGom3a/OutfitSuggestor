@@ -10,7 +10,7 @@ class LocationPermissionHandler(
 ) : PermissionHandler {
 
     override fun getCurrentLocation(
-        onLocationUpdated: (latitude: Double, longitude: Double) -> Unit,
+        handleLatitudeAndLongitude: (latitude: Double, longitude: Double) -> Unit,
         showLocationIsNull: () -> Unit,
         makeUserTurnOnLocation: () -> Unit
     ) {
@@ -22,7 +22,7 @@ class LocationPermissionHandler(
                     } else {
                         val latitude = location.latitude
                         val longitude = location.longitude
-                        onLocationUpdated(latitude, longitude)
+                        handleLatitudeAndLongitude(latitude, longitude)
                     }
                 }
             } else {

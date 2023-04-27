@@ -17,8 +17,8 @@ class DataSourceImplementation() : DataSource {
         longitude: Double?,
         location:String?,
         units: String,
-        onSuccessCallback: (WeatherResponse) -> Unit,
-        onFailureCallback: (error: Throwable) -> Unit
+        onSuccess: (WeatherResponse) -> Unit,
+        onFailure: (error: Throwable) -> Unit
     ) {
         val url = HttpUrl.Builder().scheme(Constants.SCHEME).host(Constants.BASE_URL)
             .addPathSegment("data")
@@ -35,7 +35,7 @@ class DataSourceImplementation() : DataSource {
         val request = Request.Builder().url(url).build()
         val client = OkHttpClient()
         client.executeWithCallbacks(
-            request, onSuccessCallback, onFailureCallback
+            request, onSuccess, onFailure
         )
     }
 

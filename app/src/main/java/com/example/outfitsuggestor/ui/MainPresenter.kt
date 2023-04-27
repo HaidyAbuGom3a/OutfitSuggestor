@@ -13,9 +13,9 @@ class MainPresenter(
     private val mainView: MainView,
 ) {
     private val dataSourceImplementation = DataSourceImplementation()
-    private val locationHandler = LocationPermissionHandler(activity,context)
+    private val locationHandler = LocationPermissionHandler(activity, context)
 
-    fun getWeatherData(location:String){
+    fun getWeatherData(location: String) {
         dataSourceImplementation.getWeatherData(
             null,
             null,
@@ -26,7 +26,7 @@ class MainPresenter(
         )
     }
 
-    fun getCityName(latitude:Double,longitude: Double){
+    fun getCityName(latitude: Double, longitude: Double) {
         dataSourceImplementation.getWeatherData(
             latitude,
             longitude,
@@ -42,19 +42,19 @@ class MainPresenter(
     }
 
     private fun onGetWeatherDataFailure(error: Throwable) {
-        mainView.showSomethingWentWrongInNetwork(error)
+        mainView.showRequestError(error)
     }
 
     fun handleLocationPermissions() {
         locationHandler.getCurrentLocation(
-            ::onLocationUpdated,
+            ::handleLatitudeAndLongitude,
             ::showLocationIsNull,
             ::makeUserTurnOnLocation
         )
     }
 
-    private fun onLocationUpdated(latitude: Double, longitude: Double){
-       mainView.onLocationUpdated(latitude,longitude)
+    private fun handleLatitudeAndLongitude(latitude: Double, longitude: Double) {
+        mainView.handleLatitudeAndLongitude(latitude, longitude)
     }
 
     private fun showLocationIsNull() {
@@ -66,11 +66,13 @@ class MainPresenter(
     }
 
     fun getOutfitSuitableForRain(excludedOutfits: Set<String>?): Int {
-        val outfitList = dataSourceImplementation.getOutfitsSuitableForRain().map { it.image.toString() }
-            .subtract((excludedOutfits ?: emptySet()).toSet())
+        val outfitList =
+            dataSourceImplementation.getOutfitsSuitableForRain().map { it.image.toString() }
+                .subtract((excludedOutfits ?: emptySet()).toSet())
         if (outfitList.isEmpty()) {
             resetSavedOutfits(outfitList)
-            return dataSourceImplementation.getOutfitsSuitableForRain().map { it.image.toString() }.random()
+            return dataSourceImplementation.getOutfitsSuitableForRain().map { it.image.toString() }
+                .random()
                 .toInt()
         }
         return outfitList.random().toInt()
@@ -99,11 +101,13 @@ class MainPresenter(
     }
 
     fun getLightWeightOutfit(excludedOutfits: Set<String>?): Int {
-        val outfitList = dataSourceImplementation.getLightWeightOutfits().map { it.image.toString() }
-            .subtract((excludedOutfits ?: emptySet()).toSet())
+        val outfitList =
+            dataSourceImplementation.getLightWeightOutfits().map { it.image.toString() }
+                .subtract((excludedOutfits ?: emptySet()).toSet())
         if (outfitList.isEmpty()) {
             resetSavedOutfits(outfitList)
-            return dataSourceImplementation.getLightWeightOutfits().map { it.image.toString() }.random()
+            return dataSourceImplementation.getLightWeightOutfits().map { it.image.toString() }
+                .random()
                 .toInt()
         }
         return outfitList.random().toInt()

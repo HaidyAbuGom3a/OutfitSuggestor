@@ -20,6 +20,7 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
 
+
 class MainActivity : AppCompatActivity(), MainView {
     private lateinit var binding: ActivityMainBinding
     private lateinit var weatherResponse: WeatherResponse
@@ -35,13 +36,129 @@ class MainActivity : AppCompatActivity(), MainView {
         setUp()
     }
 
+    @SuppressLint("CheckResult")
     private fun setUp() {
-        addCallbacks()
         handleLocationPermissions()
+        addCallbacks()
         SharedPrefsUtil.initPrefsUtil(applicationContext)
         getUsedOutfits()
         eraseOldestOutfitAfterGivenDays(2)
     }
+
+    private fun handleLocationPermissions() {
+        presenter.handleLocationPermissions()
+    }
+
+    override fun showLocationIsNull() {
+        Toast.makeText(
+            this,
+            "Location is null",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    override fun makeUserTurnOnLocation() {
+        Toast.makeText(this, "Turn on location ", Toast.LENGTH_SHORT).show()
+        val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+        startActivity(intent)
+    }
+
+    override fun handleLatitudeAndLongitude(latitude: Double, longitude: Double) {
+        getWeatherDataWithTwoRequests(latitude, longitude)
+    }
+
+    @SuppressLint("CheckResult")
+    private fun getWeatherDataWithTwoRequests(latitude: Double, longitude: Double) {
+        val observable = Observable.just(latitude, longitude)
+            .flatMap {
+                makeCityNameRequest(latitude, longitude)
+            }
+            .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+
+        observable.subscribe(
+            ::getWeatherData,
+            ::showError
+        )
+    }
+
+    private fun makeCityNameRequest(latitude: Double, longitude: Double) =
+        Observable.create { emitter ->
+            presenter.getCityName(latitude, longitude)
+            emitter.onNext(weatherResponse.name)
+        }
+
+    private fun getWeatherData(location: String) {
+        presenter.getWeatherData(location)
+    }
+
+    override fun showRequestError(error: Throwable) {
+        Log.i(
+            TAG,
+            "Request failed, please try another city or check your internet connection"
+        )
+    }
+
+    override fun handleWeatherDataOnUi(response: WeatherResponse) {
+        weatherResponse = response
+        runOnUiThread {
+            val weatherCondition = response.weather[0].main
+            val temperature = response.main.temp.toInt()
+            val location = response.name + ", " + response.sys.country
+            showBackgroundBasedOnWeatherCondition(weatherCondition)
+            showWeatherData(weatherCondition, temperature, location)
+            suggestOutfit(weatherCondition, temperature)
+        }
+    }
+
+    private fun showBackgroundBasedOnWeatherCondition(weatherCondition: String) {
+        when (weatherCondition) {
+            "Clear" -> setBackground(R.drawable.bg_clear)
+            "Clouds" -> setBackground(R.drawable.bg_scattered_clouds)
+            "Drizzle" -> setBackground(R.drawable.bg_shower_rain)
+            "Rain" -> setBackground(R.drawable.bg_rain)
+            "Thunderstorm" -> setBackground(R.drawable.bg_thunderstorm)
+            "Snow" -> setBackground(R.drawable.bg_snow)
+            "Atmosphere" -> setBackground(R.drawable.bg_mist)
+        }
+    }
+
+    private fun setBackground(drawable: Int) {
+        binding.root.background = ContextCompat.getDrawable(this, drawable)
+    }
+
+    private fun showWeatherData(weatherCondition: String, temperature: Int, location: String) {
+        with(binding){
+            textWeatherCondition.text = weatherCondition
+            textTemperature.text = temperature.toString()
+            textLocation.text = location
+        }
+    }
+
+    private fun suggestOutfit(weatherCondition: String, temperature: Int) {
+        val outfitImage: Int = if (weatherCondition == "Rain") {
+            presenter.getOutfitSuitableForRain(usedOutfits)
+        } else {
+            if (temperature > 25) {
+                presenter.getLightWeightOutfit(usedOutfits)
+            } else if (temperature in 10..25) {
+                presenter.getNeutralOutfit(usedOutfits)
+            } else {
+                presenter.getHeavyOutfit(usedOutfits)
+            }
+        }
+        showOutfit(outfitImage)
+        saveOutfit(outfitImage)
+    }
+
+    private fun showOutfit(outfit: Int) {
+        binding.outfit.background = ContextCompat.getDrawable(this, outfit)
+    }
+
+    private fun saveOutfit(outfit: Int) {
+        usedOutfits = (usedOutfits ?: emptySet()).plus(setOf(outfit.toString()))
+        SharedPrefsUtil.outfitList = usedOutfits
+    }
+
 
     private fun addCallbacks() {
         onClickSearchInput()
@@ -71,77 +188,15 @@ class MainActivity : AppCompatActivity(), MainView {
 
     }
 
-    private fun getWeatherData(location: String) {
-        presenter.getWeatherData(location)
-    }
-
     private fun showError(e: Throwable) {
         Log.i(TAG, "something went wrong :(")
     }
+
 
     private fun getUsedOutfits() {
         usedOutfits = SharedPrefsUtil.outfitList
     }
 
-    @SuppressLint("CheckResult")
-    private fun getWeatherDataWithTwoRequests(latitude: Double, longitude: Double) {
-        val observable = Observable.just(latitude, longitude)
-            .flatMap {
-                Observable.create<String> { emitter ->
-                    presenter.getCityName(latitude, longitude)
-                    emitter.onNext(weatherResponse.name)
-                }
-            }
-            .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-
-        observable.subscribe(
-            ::getWeatherData,
-            ::showError
-        )
-    }
-
-    private fun handleLocationPermissions() {
-        presenter.handleLocationPermissions()
-    }
-
-    override fun handleWeatherDataOnUi(response: WeatherResponse) {
-        weatherResponse = response
-        runOnUiThread {
-            val weatherCondition = response.weather[0].main
-            val temperature = response.main.temp.toInt()
-            val location = response.name + ", " + response.sys.country
-            showWeatherData(weatherCondition, temperature, location)
-            showBackgroundBasedOnWeatherCondition(weatherCondition)
-            suggestOutfit(weatherCondition, temperature)
-        }
-    }
-
-    private fun showWeatherData(weatherCondition: String, temperature: Int, location: String) {
-        binding.textWeatherCondition.text = weatherCondition
-        binding.textTemperature.text = temperature.toString()
-        binding.textLocation.text = location
-    }
-
-    private fun suggestOutfit(weatherCondition: String, temperature: Int) {
-        val outfitImage: Int = if (weatherCondition == "Rain") {
-            presenter.getOutfitSuitableForRain(usedOutfits)
-        } else {
-            if (temperature > 25) {
-                presenter.getLightWeightOutfit(usedOutfits)
-            } else if (temperature in 10..25) {
-                presenter.getNeutralOutfit(usedOutfits)
-            } else {
-                presenter.getHeavyOutfit(usedOutfits)
-            }
-        }
-        showOutfit(outfitImage)
-        saveOutfit(outfitImage)
-    }
-
-    private fun saveOutfit(outfit: Int) {
-        usedOutfits = (usedOutfits ?: emptySet()).plus(setOf(outfit.toString()))
-        SharedPrefsUtil.outfitList = usedOutfits
-    }
 
     private fun eraseOldestOutfitAfterGivenDays(days: Int) {
         if ((usedOutfits?.size ?: 0) > days) {
@@ -150,44 +205,6 @@ class MainActivity : AppCompatActivity(), MainView {
         }
     }
 
-    private fun showOutfit(outfit: Int) {
-        binding.outfit.background = ContextCompat.getDrawable(this, outfit)
-    }
-
-    override fun showSomethingWentWrongInNetwork(error: Throwable) {
-        Log.i(TAG, "failed")
-    }
-
-    override fun showLocationIsNull() {
-        Toast.makeText(
-            this,
-            "Location is null",
-            Toast.LENGTH_SHORT
-        ).show()
-    }
-
-    override fun makeUserTurnOnLocation() {
-        Toast.makeText(this, "Turn on location ", Toast.LENGTH_SHORT).show()
-        val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-        startActivity(intent)
-    }
-
-
-    private fun showBackgroundBasedOnWeatherCondition(weatherCondition: String) {
-        when (weatherCondition) {
-            "Clear" -> setBackground(R.drawable.bg_clear)
-            "Clouds" -> setBackground(R.drawable.bg_scattered_clouds)
-            "Drizzle" -> setBackground(R.drawable.bg_shower_rain)
-            "Rain" -> setBackground(R.drawable.bg_rain)
-            "Thunderstorm" -> setBackground(R.drawable.bg_thunderstorm)
-            "Snow" -> setBackground(R.drawable.bg_snow)
-            "Atmosphere" -> setBackground(R.drawable.bg_mist)
-        }
-    }
-
-    private fun setBackground(drawable: Int) {
-        binding.root.background = ContextCompat.getDrawable(this, drawable)
-    }
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -196,16 +213,16 @@ class MainActivity : AppCompatActivity(), MainView {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == Constants.PERMISSION_ID) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (checkPermissions(grantResults)) {
                 Toast.makeText(applicationContext, "Granted", Toast.LENGTH_SHORT).show()
                 presenter.handleLocationPermissions()
             }
         }
     }
 
-    override fun onLocationUpdated(latitude: Double, longitude: Double) {
-        getWeatherDataWithTwoRequests(latitude, longitude)
-    }
+    private fun checkPermissions(grantResults: IntArray) =
+        grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
+
 
     companion object {
         private const val TAG = "ACTIVITY_MAIN"

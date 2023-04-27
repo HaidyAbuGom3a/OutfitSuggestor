@@ -7,8 +7,8 @@ import java.io.IOException
 
 fun OkHttpClient.executeWithCallbacks(
     request: Request,
-    onSuccessCallback: (response: WeatherResponse) -> Unit,
-    onFailureCallback: (error: Throwable) -> Unit
+    onSuccess: (response: WeatherResponse) -> Unit,
+    onFailure: (error: Throwable) -> Unit
 ): Call {
     val call = newCall(request)
     val callback = object : Callback {
@@ -18,14 +18,14 @@ fun OkHttpClient.executeWithCallbacks(
                 val responseBody = response.body?.string()
                 val gson = Gson()
                 val result = gson.fromJson(responseBody, WeatherResponse::class.java)
-                onSuccessCallback(result)
+                onSuccess(result)
             } else {
-                onFailureCallback(Throwable("$response"))
+                onFailure(Throwable("$response"))
             }
         }
 
         override fun onFailure(call: Call, e: IOException) {
-            onFailureCallback(e)
+            onFailure(e)
         }
 
     }

@@ -4,8 +4,8 @@ import com.example.outfitsuggestor.data.model.WeatherResponse
 
 interface MainView {
     fun handleWeatherDataOnUi(response: WeatherResponse)
-    fun showSomethingWentWrongInNetwork(error: Throwable)
+    fun showRequestError(error: Throwable)
     fun showLocationIsNull()
     fun makeUserTurnOnLocation()
-    fun onLocationUpdated(latitude: Double, longitude: Double)
+    fun handleLatitudeAndLongitude(latitude: Double, longitude: Double)
 }
