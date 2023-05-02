@@ -7,12 +7,14 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doOnTextChanged
 import com.example.outfitsuggestor.R
 import com.example.outfitsuggestor.data.model.WeatherResponse
 import com.example.outfitsuggestor.databinding.ActivityMainBinding
+import com.example.outfitsuggestor.ui.permission.LocationHandlerImp
 import com.example.outfitsuggestor.utils.Constants
 import com.example.outfitsuggestor.utils.SharedPrefsUtil
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
@@ -21,24 +23,26 @@ import io.reactivex.rxjava3.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
 
 
-class MainActivity : AppCompatActivity(), MainView {
+class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    private lateinit var weatherResponse: WeatherResponse
+    private val viewModel : MainViewModel by viewModels()
+    private val locationHandler by lazy { LocationHandlerImp(this,applicationContext) }
+    private val TAG = this::class.java.simpleName.toString()
 
-    private val presenter by lazy {
-        MainPresenter(this, applicationContext, this)
-    }
     private var usedOutfits: Set<String>? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        Log.i("hello",TAG)
         setUp()
     }
 
-    @SuppressLint("CheckResult")
     private fun setUp() {
         handleLocationPermissions()
+        updateUi()
+        handleErrorResponse()
         addCallbacks()
         SharedPrefsUtil.initPrefsUtil(applicationContext)
         getUsedOutfits()
@@ -46,25 +50,16 @@ class MainActivity : AppCompatActivity(), MainView {
     }
 
     private fun handleLocationPermissions() {
-        presenter.handleLocationPermissions()
+        locationHandler.getCurrentLocation(
+            ::handleLatitudeAndLongitude,
+            ::showLocationIsNull,
+            ::makeUserTurnOnLocation
+        )
     }
 
-    override fun showLocationIsNull() {
-        Toast.makeText(
-            this,
-            "Location is null",
-            Toast.LENGTH_SHORT
-        ).show()
-    }
-
-    override fun makeUserTurnOnLocation() {
-        Toast.makeText(this, "Turn on location ", Toast.LENGTH_SHORT).show()
-        val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-        startActivity(intent)
-    }
-
-    override fun handleLatitudeAndLongitude(latitude: Double, longitude: Double) {
+    private fun handleLatitudeAndLongitude(latitude: Double, longitude: Double) {
         getWeatherDataWithTwoRequests(latitude, longitude)
+        Log.i(TAG,"$latitude, $longitude")
     }
 
     @SuppressLint("CheckResult")
@@ -83,23 +78,23 @@ class MainActivity : AppCompatActivity(), MainView {
 
     private fun makeCityNameRequest(latitude: Double, longitude: Double) =
         Observable.create { emitter ->
-            presenter.getCityName(latitude, longitude)
-            emitter.onNext(weatherResponse.name)
+            viewModel.getCityName(latitude, longitude)
+            emitter.onNext(viewModel.response.value!!.name)
         }
 
-    private fun getWeatherData(location: String) {
-        presenter.getWeatherData(location)
+    private fun getWeatherData(location: String){
+        viewModel.getWeatherData(location)
     }
 
-    override fun showRequestError(error: Throwable) {
-        Log.i(
-            TAG,
-            "Request failed, please try another city or check your internet connection"
-        )
+    private fun updateUi(){
+        viewModel.response.observe(this,::handleWeatherDataOnUi)
     }
 
-    override fun handleWeatherDataOnUi(response: WeatherResponse) {
-        weatherResponse = response
+    private fun handleErrorResponse(){
+        viewModel.error.observe(this,::showRequestError)
+    }
+
+    private fun handleWeatherDataOnUi(response: WeatherResponse) {
         runOnUiThread {
             val weatherCondition = response.weather[0].main
             val temperature = response.main.temp.toInt()
@@ -136,14 +131,14 @@ class MainActivity : AppCompatActivity(), MainView {
 
     private fun suggestOutfit(weatherCondition: String, temperature: Int) {
         val outfitImage: Int = if (weatherCondition == "Rain") {
-            presenter.getOutfitSuitableForRain(usedOutfits)
+            viewModel.getOutfitSuitableForRain(usedOutfits)
         } else {
             if (temperature > 25) {
-                presenter.getLightWeightOutfit(usedOutfits)
+                viewModel.getLightWeightOutfit(usedOutfits)
             } else if (temperature in 10..25) {
-                presenter.getNeutralOutfit(usedOutfits)
+                viewModel.getNeutralOutfit(usedOutfits)
             } else {
-                presenter.getHeavyOutfit(usedOutfits)
+                viewModel.getHeavyOutfit(usedOutfits)
             }
         }
         showOutfit(outfitImage)
@@ -159,6 +154,26 @@ class MainActivity : AppCompatActivity(), MainView {
         SharedPrefsUtil.outfitList = usedOutfits
     }
 
+    private fun showRequestError(error: Throwable) {
+        Log.i(
+            TAG,
+            "Request failed, please try another city or check your internet connection"
+        )
+    }
+
+    private fun showLocationIsNull() {
+        Toast.makeText(
+            this,
+            "Location is null",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    private fun makeUserTurnOnLocation() {
+        Toast.makeText(this, "Turn on location ", Toast.LENGTH_SHORT).show()
+        val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+        startActivity(intent)
+    }
 
     private fun addCallbacks() {
         onClickSearchInput()
@@ -215,17 +230,12 @@ class MainActivity : AppCompatActivity(), MainView {
         if (requestCode == Constants.PERMISSION_ID) {
             if (checkPermissions(grantResults)) {
                 Toast.makeText(applicationContext, "Granted", Toast.LENGTH_SHORT).show()
-                presenter.handleLocationPermissions()
+                handleLocationPermissions()
             }
         }
     }
 
     private fun checkPermissions(grantResults: IntArray) =
         grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
-
-
-    companion object {
-        private const val TAG = "ACTIVITY_MAIN"
-    }
 
 }

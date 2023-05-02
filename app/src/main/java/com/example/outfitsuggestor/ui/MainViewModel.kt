@@ -1,22 +1,25 @@
 package com.example.outfitsuggestor.ui
 
-import android.app.Activity
-import android.content.Context
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import com.example.outfitsuggestor.data.model.WeatherResponse
-import com.example.outfitsuggestor.data.source.DataSourceImplementation
-import com.example.outfitsuggestor.ui.permission.LocationPermissionHandler
+import com.example.outfitsuggestor.data.source.repository.Repository
 import com.example.outfitsuggestor.utils.SharedPrefsUtil
 
-class MainPresenter(
-    activity: Activity,
-    context: Context,
-    private val mainView: MainView,
-) {
-    private val dataSourceImplementation = DataSourceImplementation()
-    private val locationHandler = LocationPermissionHandler(activity, context)
+class MainViewModel : ViewModel() {
+    private val repository = Repository()
+
+    private val _response = MutableLiveData<WeatherResponse>()
+    val response: LiveData<WeatherResponse>
+        get() = _response
+    private val _error = MutableLiveData<Throwable>()
+    val error: LiveData<Throwable>
+        get() = _error
+
 
     fun getWeatherData(location: String) {
-        dataSourceImplementation.getWeatherData(
+        repository.getWeatherData(
             null,
             null,
             location,
@@ -27,7 +30,7 @@ class MainPresenter(
     }
 
     fun getCityName(latitude: Double, longitude: Double) {
-        dataSourceImplementation.getWeatherData(
+        repository.getWeatherData(
             latitude,
             longitude,
             null,
@@ -38,40 +41,20 @@ class MainPresenter(
     }
 
     private fun onGetWeatherDataSuccess(response: WeatherResponse) {
-        mainView.handleWeatherDataOnUi(response)
+        _response.postValue(response)
     }
 
     private fun onGetWeatherDataFailure(error: Throwable) {
-        mainView.showRequestError(error)
-    }
-
-    fun handleLocationPermissions() {
-        locationHandler.getCurrentLocation(
-            ::handleLatitudeAndLongitude,
-            ::showLocationIsNull,
-            ::makeUserTurnOnLocation
-        )
-    }
-
-    private fun handleLatitudeAndLongitude(latitude: Double, longitude: Double) {
-        mainView.handleLatitudeAndLongitude(latitude, longitude)
-    }
-
-    private fun showLocationIsNull() {
-        mainView.showLocationIsNull()
-    }
-
-    private fun makeUserTurnOnLocation() {
-        mainView.makeUserTurnOnLocation()
+        _error.postValue(error)
     }
 
     fun getOutfitSuitableForRain(excludedOutfits: Set<String>?): Int {
         val outfitList =
-            dataSourceImplementation.getOutfitsSuitableForRain().map { it.image.toString() }
+            repository.getOutfitsSuitableForRain().map { it.image.toString() }
                 .subtract((excludedOutfits ?: emptySet()).toSet())
         if (outfitList.isEmpty()) {
             resetSavedOutfits(outfitList)
-            return dataSourceImplementation.getOutfitsSuitableForRain().map { it.image.toString() }
+            return repository.getOutfitsSuitableForRain().map { it.image.toString() }
                 .random()
                 .toInt()
         }
@@ -79,22 +62,22 @@ class MainPresenter(
     }
 
     fun getNeutralOutfit(excludedOutfits: Set<String>?): Int {
-        val outfitList = dataSourceImplementation.getNeutralOutfits().map { it.image.toString() }
+        val outfitList = repository.getNeutralOutfits().map { it.image.toString() }
             .subtract((excludedOutfits ?: emptySet()).toSet())
         if (outfitList.isEmpty()) {
             resetSavedOutfits(outfitList)
-            return dataSourceImplementation.getNeutralOutfits().map { it.image.toString() }.random()
+            return repository.getNeutralOutfits().map { it.image.toString() }.random()
                 .toInt()
         }
         return outfitList.random().toInt()
     }
 
     fun getHeavyOutfit(excludedOutfits: Set<String>?): Int {
-        val outfitList = dataSourceImplementation.getHeavyOutfits().map { it.image.toString() }
+        val outfitList = repository.getHeavyOutfits().map { it.image.toString() }
             .subtract((excludedOutfits ?: emptySet()).toSet())
         if (outfitList.isEmpty()) {
             resetSavedOutfits(outfitList)
-            return dataSourceImplementation.getHeavyOutfits().map { it.image.toString() }.random()
+            return repository.getHeavyOutfits().map { it.image.toString() }.random()
                 .toInt()
         }
         return outfitList.random().toInt()
@@ -102,11 +85,11 @@ class MainPresenter(
 
     fun getLightWeightOutfit(excludedOutfits: Set<String>?): Int {
         val outfitList =
-            dataSourceImplementation.getLightWeightOutfits().map { it.image.toString() }
+            repository.getLightWeightOutfits().map { it.image.toString() }
                 .subtract((excludedOutfits ?: emptySet()).toSet())
         if (outfitList.isEmpty()) {
             resetSavedOutfits(outfitList)
-            return dataSourceImplementation.getLightWeightOutfits().map { it.image.toString() }
+            return repository.getLightWeightOutfits().map { it.image.toString() }
                 .random()
                 .toInt()
         }
