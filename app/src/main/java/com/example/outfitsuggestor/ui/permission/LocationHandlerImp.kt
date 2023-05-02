@@ -4,10 +4,10 @@ import android.app.Activity
 import android.content.Context
 import com.example.outfitsuggestor.utils.LocationUtils
 
-class LocationPermissionHandler(
+class LocationHandlerImp(
     private val activity: Activity,
     private val context: Context
-) : PermissionHandler {
+) : LocationHandler {
 
     override fun getCurrentLocation(
         handleLatitudeAndLongitude: (latitude: Double, longitude: Double) -> Unit,
