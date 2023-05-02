@@ -35,7 +35,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        Log.i("hello",TAG)
         setUp()
     }
 
@@ -59,7 +58,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun handleLatitudeAndLongitude(latitude: Double, longitude: Double) {
         getWeatherDataWithTwoRequests(latitude, longitude)
-        Log.i(TAG,"$latitude, $longitude")
     }
 
     @SuppressLint("CheckResult")
