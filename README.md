@@ -37,7 +37,7 @@ Follow these steps to get started with the **Outfit Suggester** app:
 1. Clone the repository to your local machine.
    
    ```bash
-   git clone https://github.com/your-username/outfit-suggestor-app.git
+   git clone https://github.com/HaidyAbuGom3a/OutfitSuggestor.git
    ```
 
 2. Open the project in Android Studio.
