@@ -74,4 +74,4 @@ This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-Thank you for using the **Outfit Suggester** app! We hope it adds a touch of convenience and style to your daily life. If you have any questions or feedback, please don't hesitate to reach out to us at contact@outfitsuggestorapp.com. Happy styling!
+Thank you for using the **Outfit Suggester** app! We hope it adds a touch of convenience and style to your daily life. If you have any questions or feedback, please don't hesitate to reach out to us at haidyabugom3a@gmail.com. Happy styling!
